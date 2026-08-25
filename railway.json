@@ -1,0 +1,11 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "pnpm install && pnpm --filter @workspace/personnel-monitoring run build && pnpm --filter @workspace/db run push-force && pnpm --filter @workspace/api-server run build"
+  },
+  "deploy": {
+    "startCommand": "node artifacts/api-server/dist/index.mjs",
+    "healthcheckPath": "/api/healthz"
+  }
+}
