@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BSU — Facial Recognition Control Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary:   hsl(349,84%,42%);
+  --primary-dark: hsl(349,84%,35%);
+  --secondary: hsl(220,80%,30%);
+  --bg:        #F9FAFB;
+  --white:     #FFFFFF;
+  --border:    #E5E7EB;
+  --border-light: #F3F4F6;
+  --text:      #111827;
+  --text-mid:  #374151;
+  --muted:     #6B7280;
+  --light:     #9CA3AF;
+  --success:   #16A34A;
+  --danger:    #DC2626;
+  --warning:   #D97706;
+  --radius:    12px;
+  --sidebar-w: 256px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+body{display:flex;flex-direction:column;min-height:100vh}
+
+/* ── header ──────────────────────────────────────────── */
+.hdr{background:var(--white);width:100%;flex-shrink:0;border-bottom:6px solid var(--primary);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.hdr-main{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 16px 20px;text-align:center;gap:6px}
+.hdr-title{font-family:'Playfair Display',serif;font-size:clamp(20px,4vw,40px);font-weight:800;color:var(--text);letter-spacing:-0.5px;line-height:1.1}
+.hdr-subtitle{font-family:'Playfair Display',serif;font-size:clamp(12px,2vw,18px);font-weight:700;color:var(--primary);letter-spacing:0.04em;margin-top:2px}
+.hdr-pill{margin-top:12px;display:inline-block;background:#F3F4F6;border:1px solid var(--border);border-radius:999px;padding:8px 28px;box-shadow:inset 0 1px 3px rgba(0,0,0,.06)}
+.hdr-pill-text{font-size:clamp(10px,1.5vw,15px);font-weight:800;color:#1F2937;letter-spacing:0.25em;text-transform:uppercase}
+.hdr-bar-blue{background:var(--secondary);padding:8px 16px;text-align:center;color:#fff;font-weight:700;font-size:clamp(9px,1.2vw,12px);letter-spacing:0.2em;text-transform:uppercase}
+.hdr-bar-red{background:var(--primary);padding:7px 16px;text-align:center;color:#fff;font-weight:700;font-size:clamp(9px,1.2vw,12px);letter-spacing:0.3em;text-transform:uppercase;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+
+/* ── layout ──────────────────────────────────────────── */
+.layout{display:flex;flex:1;overflow:hidden;max-width:1600px;margin:0 auto;width:100%}
+.sidebar{width:var(--sidebar-w);background:var(--white);border-right:1px solid var(--border);flex-shrink:0;overflow-y:auto;display:flex;flex-direction:column;gap:0;box-shadow:4px 0 24px -12px rgba(0,0,0,.1)}
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:0;min-width:0}
+
+/* ── sidebar sections ─────────────────────────────────── */
+.sb-section{padding:16px}
+.sb-divider{border:none;border-top:1px solid var(--border-light);margin:0 16px}
+.sec-label{font-size:10px;font-weight:700;color:var(--light);letter-spacing:0.15em;text-transform:uppercase;margin-bottom:10px}
+
+/* ── status indicator ────────────────────────────────── */
+.status-row{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 12px;background:var(--bg);border-radius:var(--radius);border:1px solid var(--border-light)}
+.dot{width:10px;height:10px;border-radius:50%;background:#D1D5DB;flex-shrink:0;transition:background .3s}
+.dot.on{background:var(--success);box-shadow:0 0 0 3px rgba(22,163,74,.2)}
+.dot.connecting{background:var(--warning);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.svc-text{font-size:12px;font-weight:600;color:var(--muted)}
+.svc-text.on{color:var(--success)}
+
+/* ── buttons ──────────────────────────────────────────── */
+.btn{display:block;width:100%;padding:10px 16px;border:none;border-radius:var(--radius);font-size:13px;font-weight:600;cursor:pointer;transition:background .15s,opacity .15s,box-shadow .15s;text-align:center;font-family:'Inter',sans-serif}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-start{background:#16A34A;color:#fff;margin-bottom:6px;box-shadow:0 1px 3px rgba(22,163,74,.25)}
+.btn-start:hover:not(:disabled){background:#15803D;box-shadow:0 2px 6px rgba(22,163,74,.3)}
+.btn-stop{background:var(--danger);color:#fff;box-shadow:0 1px 3px rgba(220,38,38,.25)}
+.btn-stop:hover:not(:disabled){background:#B91C1C;box-shadow:0 2px 6px rgba(220,38,38,.3)}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.btn-primary:hover:not(:disabled){background:var(--primary-dark)}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);font-size:12px;padding:6px 12px}
+.btn-ghost:hover:not(:disabled){background:var(--bg);color:var(--text)}
+.btn-outline{background:var(--white);color:var(--secondary);border:1px solid var(--secondary);font-size:12px;padding:6px 12px}
+.btn-outline:hover:not(:disabled){background:hsl(220,80%,30%,.06)}
+.btn-sm{padding:6px 12px;font-size:12px;border-radius:8px;width:auto;display:inline-flex;align-items:center;gap:4px}
+.btn-nav{display:flex;align-items:center;gap:10px;padding:10px 14px;width:100%;border:none;border-radius:10px;background:transparent;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;text-align:left;transition:background .12s,color .12s;font-family:'Inter',sans-serif}
+.btn-nav:hover{background:var(--bg);color:var(--text)}
+.btn-nav-icon{font-size:15px;line-height:1;flex-shrink:0}
+
+/* ── camera sidebar list ──────────────────────────────── */
+.cam-list-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;font-size:12px;color:var(--muted);transition:background .12s}
+.cam-list-item:hover{background:var(--bg)}
+.cam-list-dot{width:8px;height:8px;border-radius:50%;background:#D1D5DB;flex-shrink:0;transition:background .3s}
+.cam-list-dot.on{background:var(--success);box-shadow:0 0 0 2px rgba(22,163,74,.2)}
+
+/* ── tabs ────────────────────────────────────────────── */
+.tabs-bar{padding:12px 16px 0;background:var(--white);border-bottom:1px solid var(--border);display:flex;gap:2px;flex-shrink:0;position:sticky;top:0;z-index:10;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.tab-btn{padding:8px 18px;background:transparent;border:none;border-radius:8px 8px 0 0;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;transition:color .15s,background .15s;display:inline-flex;align-items:center;gap:6px;font-family:'Inter',sans-serif;border-bottom:2px solid transparent;margin-bottom:-1px}
+.tab-btn:hover{color:var(--text);background:var(--bg)}
+.tab-btn.active{color:var(--primary);border-bottom-color:var(--primary);font-weight:600}
+.tab-pane{display:none;padding:20px}
+.tab-pane.active{display:flex;flex-direction:column;gap:16px}
+
+/* ── camera grid ──────────────────────────────────────── */
+.cam-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(460px,1fr));gap:16px}
+.cam-card{background:var(--white);border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.cam-card-hdr{padding:10px 14px;border-bottom:1px solid var(--border-light);display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:var(--text-mid)}
+.badge{font-size:10px;padding:3px 9px;border-radius:999px;font-weight:600;letter-spacing:0.02em}
+.badge-on{background:#DCFCE7;color:#15803D;border:1px solid #BBF7D0}
+.badge-off{background:#FEE2E2;color:#B91C1C;border:1px solid #FECACA}
+.badge-wait{background:#FEF3C7;color:#B45309;border:1px solid #FDE68A}
+.cam-feed-wrap{width:100%;aspect-ratio:16/9;background:#111827;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.cam-feed-wrap img{width:100%;height:100%;object-fit:contain;display:block}
+.cam-no-feed{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#374151;text-align:center;padding:20px;width:100%;height:100%;position:absolute;inset:0}
+.cam-no-feed .icon{font-size:36px;opacity:.4}
+.cam-no-feed .no-feed-label{font-size:13px;font-weight:500;color:var(--muted)}
+.cam-no-feed .no-feed-sub{font-size:11px;color:var(--light)}
+
+/* ── feed loading / init overlay ─────────────────────────── */
+.cam-init{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;width:100%;height:100%;position:absolute;inset:0;background:#0d1117}
+.cam-spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,.1);border-top-color:var(--primary);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cam-init-label{font-size:12px;font-weight:500;color:#9CA3AF;text-align:center;line-height:1.5}
+.cam-init-sub{font-size:11px;color:#4B5563;text-align:center}
+
+/* ── config forms ─────────────────────────────────────── */
+.cfg-section{background:var(--white);border-radius:var(--radius);padding:18px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.cfg-hdr{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border-light)}
+.cfg-num{background:var(--primary);color:#fff;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+.cfg-title{font-size:14px;font-weight:700;color:var(--text)}
+.cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}
+.fgrp{display:flex;flex-direction:column;gap:4px}
+.fgrp label{font-size:11px;font-weight:500;color:var(--muted);letter-spacing:0.02em}
+.fgrp input,.fgrp select{background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:7px 11px;font-size:13px;width:100%;font-family:'Inter',sans-serif;transition:border-color .15s,box-shadow .15s}
+.fgrp input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(190,15,42,.1)}
+.fgrp.span2{grid-column:span 2}
+.test-result{font-size:11px;margin-top:5px;min-height:16px;font-weight:500}
+
+/* ── log box ──────────────────────────────────────────── */
+.log-wrap{display:flex;flex-direction:column;gap:8px;flex:1}
+.log-ctrls{display:flex;gap:6px}
+.logbox{background:#0F172A;border-radius:var(--radius);font-family:'Menlo','Courier New',monospace;font-size:11.5px;color:#86EFAC;padding:14px;min-height:320px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;border:1px solid #1E293B;line-height:1.6}
+
+/* ── toast ────────────────────────────────────────────── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--white);border:1px solid var(--border);border-left:4px solid var(--secondary);padding:12px 18px;border-radius:10px;font-size:13px;font-weight:500;z-index:9999;opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.1);color:var(--text)}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok{border-left-color:var(--success)}
+.toast.err{border-left-color:var(--danger)}
+
+/* ── scrollbar ────────────────────────────────────────── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(107,114,128,.3);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:rgba(107,114,128,.5)}
+
+.mt-auto{margin-top:auto}
+.footer-note{font-size:10px;color:var(--light);text-align:center;padding:12px;border-top:1px solid var(--border-light)}
+.section-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px}
+.section-sub{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<!-- ── header ─────────────────────────────────────────── -->
+<header class="hdr">
+  <div class="hdr-main">
+    <div class="hdr-title">BATANGAS STATE UNIVERSITY</div>
+    <div class="hdr-subtitle">THE NATIONAL ENGINEERING UNIVERSITY</div>
+    <div class="hdr-pill">
+      <span class="hdr-pill-text">Facial Recognition Control Panel</span>
+    </div>
+  </div>
+  <div class="hdr-bar-blue">Leading Innovations, Transforming Lives, Building the Nation</div>
+  <div class="hdr-bar-red">Lipa Campus &nbsp;·&nbsp; College of Engineering and Technology</div>
+</header>
+
+<div class="layout">
+
+  <!-- ── sidebar ──────────────────────────────────────── -->
+  <aside class="sidebar">
+
+    <!-- Service Control -->
+    <div class="sb-section">
+      <div class="sec-label">Service Control</div>
+      <div class="status-row">
+        <div class="dot" id="dot"></div>
+        <span class="svc-text" id="svcText">Checking…</span>
+      </div>
+      <button class="btn btn-start" id="btnStart" onclick="startService()">▶ &nbsp;Start Recognition</button>
+      <button class="btn btn-stop"  id="btnStop"  onclick="stopService()"  disabled>■ &nbsp;Stop Service</button>
+    </div>
+
+    <hr class="sb-divider">
+
+    <!-- Camera List -->
+    <div class="sb-section">
+      <div class="sec-label">Cameras</div>
+      <div id="camSideList"><span style="color:var(--light);font-size:12px">—</span></div>
+    </div>
+
+    <hr class="sb-divider">
+
+    <!-- Quick Links -->
+    <div class="sb-section">
+      <div class="sec-label">Quick Links</div>
+      <button class="btn-nav" onclick="switchTab('config')">
+        <span class="btn-nav-icon">⚙</span> Camera Config
+      </button>
+      <button class="btn-nav" onclick="switchTab('logs')">
+        <span class="btn-nav-icon">📋</span> Service Logs
+      </button>
+    </div>
+
+    <div class="mt-auto footer-note">
+      BSU FaceRec Dashboard v1.0<br>Personnel Monitoring System
+    </div>
+  </aside>
+
+  <!-- ── main ─────────────────────────────────────────── -->
+  <main class="main">
+
+    <!-- Tab Bar -->
+    <div class="tabs-bar">
+      <button class="tab-btn active" onclick="switchTab('feeds')"  id="tb-feeds" >📹 Live Feeds</button>
+      <button class="tab-btn"        onclick="switchTab('config')" id="tb-config">⚙ Camera Config</button>
+      <button class="tab-btn"        onclick="switchTab('logs')"   id="tb-logs"  >📋 Service Logs</button>
+    </div>
+
+    <!-- Feeds Tab -->
+    <div class="tab-pane active" id="tab-feeds">
+      <div class="cam-grid" id="camGrid">
+        <div style="color:var(--muted)">Loading…</div>
+      </div>
+    </div>
+
+    <!-- Config Tab -->
+    <div class="tab-pane" id="tab-config">
+      <div id="camConfigForms"></div>
+
+      <!-- API & Recognition Settings -->
+      <div class="cfg-section">
+        <div class="cfg-hdr">
+          <div style="width:8px;height:24px;background:var(--primary);border-radius:4px;flex-shrink:0"></div>
+          <div>
+            <div class="cfg-title">API &amp; Recognition Settings</div>
+          </div>
+        </div>
+        <div class="cfg-grid">
+          <div class="fgrp span2">
+            <label>API URL</label>
+            <input type="text" id="apiUrl" placeholder="https://your-app.replit.app">
+          </div>
+          <div class="fgrp span2">
+            <label>API Key</label>
+            <input type="password" id="apiKey" placeholder="your-api-key">
+          </div>
+          <div class="fgrp">
+            <label>YOLO Image Size <span style="color:var(--light);font-weight:400">(480 = faster, 640 = default)</span></label>
+            <input type="text" id="yoloImgsz" value="640" style="max-width:110px">
+          </div>
+          <div class="fgrp" style="justify-content:flex-end;padding-top:22px">
+            <button class="btn btn-primary btn-sm" onclick="saveConfig()">💾 &nbsp;Save All Configuration</button>
+          </div>
+        </div>
+        <div id="cfgStatus" style="font-size:12px;font-weight:500;color:var(--success);margin-top:8px;min-height:18px"></div>
+      </div>
+    </div>
+
+    <!-- Logs Tab -->
+    <div class="tab-pane" id="tab-logs">
+      <div class="log-wrap">
+        <div class="log-ctrls">
+          <button class="btn btn-ghost btn-sm" onclick="clearLog()">Clear</button>
+          <button class="btn btn-ghost btn-sm" onclick="copyLog()">Copy</button>
+        </div>
+        <div class="logbox" id="logBox"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── state ──────────────────────────────────────────────── */
+let serviceRunning   = false;
+let serviceStartedAt = 0;   // timestamp when Start was clicked
+let cameras          = [];
+let logEs            = null;
+let toastTimer       = null;
+const STREAM_PORT    = {{ stream_port }};
+
+/* ── init ───────────────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  loadConfig();
+  startLogStream();
+  pollStatus();
+  setInterval(pollStatus, 3000);
+});
+
+/* ── tabs ───────────────────────────────────────────────── */
+function switchTab(name) {
+  ['feeds','config','logs'].forEach(n => {
+    document.getElementById('tb-'+n).classList.toggle('active', n===name);
+    document.getElementById('tab-'+n).classList.toggle('active', n===name);
+  });
+}
+
+/* ── service control ────────────────────────────────────── */
+async function startService() {
+  setConnecting();
+  try {
+    const r = await fetch('/api/service/start', {method:'POST'});
+    const d = await r.json();
+    toast(d.message, d.ok ? 'ok' : 'err');
+    if (d.ok) {
+      serviceStartedAt = Date.now();
+      setStatus(true);
+      // Render feed cards immediately with "initializing" overlay,
+      // then begin polling every 3 s for the MJPEG server to come up.
+      refreshFeeds();
+      scheduleFirstFeedAttempt();
+    } else {
+      setStatus(false);
+    }
+  } catch(e) { toast('Request failed: '+e.message,'err'); setStatus(false); }
+}
+
+async function stopService() {
+  document.getElementById('btnStop').disabled = true;
+  try {
+    const r = await fetch('/api/service/stop', {method:'POST'});
+    const d = await r.json();
+    toast(d.message, d.ok ? 'ok' : 'err');
+  } catch(e) { toast('Request failed: '+e.message,'err'); }
+  serviceStartedAt = 0;
+  setStatus(false);
+  refreshFeeds();
+}
+
+function setConnecting() {
+  document.getElementById('dot').className      = 'dot connecting';
+  document.getElementById('svcText').className  = 'svc-text';
+  document.getElementById('svcText').textContent = 'Starting…';
+  document.getElementById('btnStart').disabled  = true;
+  document.getElementById('btnStop').disabled   = true;
+}
+
+function setStatus(running) {
+  serviceRunning = running;
+  const dot = document.getElementById('dot');
+  const txt = document.getElementById('svcText');
+  dot.className    = 'dot' + (running ? ' on' : '');
+  txt.className    = 'svc-text' + (running ? ' on' : '');
+  txt.textContent  = running ? 'Service Running' : 'Service Stopped';
+  document.getElementById('btnStart').disabled = running;
+  document.getElementById('btnStop').disabled  = !running;
+}
+
+async function pollStatus() {
+  try {
+    const r = await fetch('/api/service/status');
+    const d = await r.json();
+    if (d.running !== serviceRunning) {
+      if (d.running) serviceStartedAt = Date.now();
+      setStatus(d.running);
+      refreshFeeds();
+      if (d.running) scheduleFirstFeedAttempt();
+    }
+  } catch(e) {}
+}
+
+/* ── First-connect scheduling ───────────────────────────────
+   The recognition service loads YOLO + FaceNet which can take
+   30-120 seconds.  We try every 3 s for the first 3 minutes,
+   and if a feed succeeds we stop the loop.                  */
+let _feedPollTimer = null;
+function scheduleFirstFeedAttempt() {
+  clearInterval(_feedPollTimer);
+  const deadline = Date.now() + 3 * 60 * 1000;  // 3-minute window
+  _feedPollTimer = setInterval(() => {
+    if (!serviceRunning || Date.now() > deadline) {
+      clearInterval(_feedPollTimer);
+      return;
+    }
+    // If all known feeds are ONLINE we can stop
+    const allOnline = cameras.every(c => {
+      const b = document.getElementById('cb-'+c.index);
+      return b && b.textContent === 'ONLINE';
+    });
+    if (allOnline) { clearInterval(_feedPollTimer); return; }
+    // Kick feeds that are still on the init overlay
+    cameras.forEach(cam => {
+      const init = document.getElementById('ci-'+cam.index);
+      if (init) _attemptFeed(cam);          // still showing spinner → retry
+    });
+  }, 3000);
+}
+
+/* ── camera feeds ───────────────────────────────────────── */
+async function loadConfig() {
+  try {
+    const r = await fetch('/api/cameras');
+    const d = await r.json();
+    cameras = d.cameras || [];
+    document.getElementById('apiUrl').value    = d.api_url    || '';
+    document.getElementById('apiKey').value    = d.api_key    || '';
+    document.getElementById('yoloImgsz').value = d.yolo_imgsz || '640';
+    buildSideList();
+    buildConfigForms(cameras);
+    refreshFeeds();
+  } catch(e) { console.error('loadConfig:', e); }
+}
+
+function buildSideList() {
+  const el = document.getElementById('camSideList');
+  if (!cameras.length) { el.innerHTML='<span style="color:var(--light);font-size:12px">No cameras configured</span>'; return; }
+  el.innerHTML = cameras.map(c =>
+    `<div class="cam-list-item">
+       <div class="cam-list-dot" id="sdt-${c.index}"></div>
+       <span style="font-size:13px;color:var(--text-mid)">${c.name}</span>
+     </div>`
+  ).join('');
+}
+
+function refreshFeeds() {
+  const grid = document.getElementById('camGrid');
+  if (!cameras.length) {
+    grid.innerHTML = `<div style="color:var(--muted);padding:24px;background:var(--white);border-radius:12px;border:1px solid var(--border)">
+      No cameras configured. Go to <b>⚙ Camera Config</b> to add cameras.
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = cameras.map(cam => {
+    let feedHtml;
+    if (!serviceRunning) {
+      // Service is off — show idle placeholder
+      feedHtml = `<div class="cam-no-feed">
+           <div class="icon">📷</div>
+           <div class="no-feed-label">Service not running</div>
+           <div class="no-feed-sub">Start the recognition service to view feeds</div>
+         </div>`;
+    } else {
+      // Service is on — show initializing spinner; img is hidden until connected
+      feedHtml = `
+        <div class="cam-init" id="ci-${cam.index}">
+          <div class="cam-spinner"></div>
+          <div class="cam-init-label">Connecting to camera feed…</div>
+          <div class="cam-init-sub">AI models are loading, please wait</div>
+        </div>
+        <img id="fi-${cam.index}" src="" style="display:none;width:100%;height:100%;object-fit:contain"
+             onerror="onFeedErr(${cam.index})"
+             onload="onFeedOk(${cam.index})">`;
+    }
+    return `
+      <div class="cam-card">
+        <div class="cam-card-hdr">
+          <span>${cam.name}</span>
+          <span class="badge ${serviceRunning ? 'badge-wait' : 'badge-off'}" id="cb-${cam.index}">${serviceRunning ? 'LOADING' : 'OFFLINE'}</span>
+          <span style="margin-left:auto;font-size:11px;color:var(--muted);font-weight:400">${cam.ip}</span>
+        </div>
+        <div class="cam-feed-wrap">${feedHtml}</div>
+      </div>`;
+  }).join('');
+
+  // Kick off the first connection attempt for each camera
+  if (serviceRunning) cameras.forEach(cam => _attemptFeed(cam));
+}
+
+function _attemptFeed(cam) {
+  const img = document.getElementById('fi-'+cam.index);
+  if (!img) return;
+  img.src = `http://localhost:${STREAM_PORT}/stream/${encodeURIComponent(cam.name)}?t=${Date.now()}`;
+}
+
+function onFeedErr(idx) {
+  // Stream not ready yet — badge stays LOADING while spinner is visible
+  if (!serviceRunning) {
+    setBadge(idx, 'off', 'OFFLINE');
+    setSideDot(idx, false);
+  }
+  // scheduleFirstFeedAttempt's interval will retry; nothing extra needed here
+}
+
+function onFeedOk(idx) {
+  // Feed connected — hide spinner overlay, show the img
+  const init = document.getElementById('ci-'+idx);
+  const img  = document.getElementById('fi-'+idx);
+  if (init) init.style.display = 'none';
+  if (img)  img.style.display  = 'block';
+  setBadge(idx, 'on', 'ONLINE');
+  setSideDot(idx, true);
+}
+
+function setBadge(idx, cls, label) {
+  const el = document.getElementById('cb-'+idx);
+  if (el) { el.className = `badge badge-${cls}`; el.textContent = label; }
+}
+
+function setSideDot(idx, on) {
+  const el = document.getElementById('sdt-'+idx);
+  if (el) el.className = 'cam-list-dot' + (on ? ' on' : '');
+}
+
+/* ── config forms ───────────────────────────────────────── */
+function buildConfigForms(cams) {
+  const el = document.getElementById('camConfigForms');
+  el.innerHTML = [1,2,3,4].map(i => {
+    const c = cams.find(x=>x.index===i) || {};
+    return `
+      <div class="cfg-section">
+        <div class="cfg-hdr">
+          <div class="cfg-num">${i}</div>
+          <div class="cfg-title">Camera ${i}</div>
+          <label style="margin-left:auto;display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;font-weight:500">
+            <input type="checkbox" id="ce${i}" ${c.ip?'checked':''}> Enable
+          </label>
+        </div>
+        <div class="cfg-grid">
+          <div class="fgrp"><label>Name</label>
+            <input type="text" id="cn${i}" value="${c.name||''}" placeholder="Camera ${i}"></div>
+          <div class="fgrp"><label>IP Address</label>
+            <input type="text" id="ci${i}" value="${c.ip||''}" placeholder="192.168.1.${63+i}"></div>
+          <div class="fgrp"><label>Username</label>
+            <input type="text" id="cu${i}" value="${c.user||'admin'}" placeholder="admin"></div>
+          <div class="fgrp"><label>Password</label>
+            <input type="password" id="cp${i}" placeholder="(leave blank to keep existing)"></div>
+          <div class="fgrp"><label>Port</label>
+            <input type="text" id="cpo${i}" value="${c.port||'554'}" placeholder="554" style="max-width:100px"></div>
+          <div class="fgrp"><label>Stream Path</label>
+            <input type="text" id="csp${i}" value="${c.stream_path||'/Streaming/Channels/101'}" placeholder="/Streaming/Channels/101"></div>
+          <div class="fgrp span2">
+            <button class="btn btn-outline btn-sm" onclick="testCamera(${i})">Test Connection</button>
+            <div class="test-result" id="tr${i}"></div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function testCamera(i) {
+  const ip   = document.getElementById('ci'+i).value.trim();
+  const user = document.getElementById('cu'+i).value.trim() || 'admin';
+  const pass = document.getElementById('cp'+i).value.trim();
+  const port = document.getElementById('cpo'+i).value.trim() || '554';
+  const path = document.getElementById('csp'+i).value.trim() || '/Streaming/Channels/101';
+  const res  = document.getElementById('tr'+i);
+  if (!ip) { res.textContent='No IP set.'; res.style.color='var(--danger)'; return; }
+  const url = `rtsp://${encodeURIComponent(user)}:${encodeURIComponent(pass)}@${ip}:${port}${path}`;
+  res.textContent = 'Testing connection…'; res.style.color = 'var(--warning)';
+  try {
+    const r = await fetch('/api/cameras/test',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
+    const d = await r.json();
+    res.textContent = (d.ok?'✓ ':'✗ ') + d.message;
+    res.style.color = d.ok ? 'var(--success)' : 'var(--danger)';
+  } catch(e) { res.textContent='Error: '+e.message; res.style.color='var(--danger)'; }
+}
+
+async function saveConfig() {
+  const cams = [];
+  for (let i=1;i<=4;i++) {
+    if (!document.getElementById('ce'+i).checked) continue;
+    const ip = document.getElementById('ci'+i).value.trim();
+    if (!ip) continue;
+    cams.push({
+      index: i,
+      name:        document.getElementById('cn'+i).value.trim()  || `Camera ${i}`,
+      ip,
+      user:        document.getElementById('cu'+i).value.trim()  || 'admin',
+      pass:        document.getElementById('cp'+i).value.trim(),
+      port:        document.getElementById('cpo'+i).value.trim() || '554',
+      stream_path: document.getElementById('csp'+i).value.trim() || '/Streaming/Channels/101',
+    });
+  }
+  const payload = {
+    cameras: cams,
+    api_url:    document.getElementById('apiUrl').value.trim(),
+    api_key:    document.getElementById('apiKey').value.trim(),
+    yolo_imgsz: document.getElementById('yoloImgsz').value.trim() || '640',
+  };
+  try {
+    const r = await fetch('/api/cameras',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const d = await r.json();
+    const s = document.getElementById('cfgStatus');
+    s.textContent  = d.ok ? '✓ Configuration saved to .env' : '✗ Save failed.';
+    s.style.color  = d.ok ? 'var(--success)' : 'var(--danger)';
+    if (d.ok) { toast('Configuration saved.','ok'); await loadConfig(); setTimeout(()=>s.textContent='',4000); }
+  } catch(e) { toast('Save failed: '+e.message,'err'); }
+}
+
+/* ── log streaming ──────────────────────────────────────── */
+function startLogStream() {
+  if (logEs) { logEs.close(); logEs=null; }
+  logEs = new EventSource('/api/service/logs/stream');
+  logEs.onmessage = e => appendLog(JSON.parse(e.data));
+  logEs.onerror   = () => setTimeout(startLogStream, 5000);
+}
+
+function appendLog(line) {
+  const b = document.getElementById('logBox');
+  const atBot = b.scrollHeight - b.clientHeight <= b.scrollTop + 20;
+  b.textContent += line + '\n';
+  if (b.textContent.length > 60000) b.textContent = b.textContent.slice(-50000);
+  if (atBot) b.scrollTop = b.scrollHeight;
+}
+
+function clearLog() { document.getElementById('logBox').textContent=''; }
+function copyLog()  { navigator.clipboard.writeText(document.getElementById('logBox').textContent).then(()=>toast('Copied to clipboard.','ok')); }
+
+/* ── toast ──────────────────────────────────────────────── */
+function toast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className   = 'toast show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.className='toast', 3500);
+}
+</script>
+</body>
+</html>
